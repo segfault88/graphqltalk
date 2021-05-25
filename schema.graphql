@@ -1,0 +1,40 @@
+type Query {
+	movio: Movio
+}
+
+type Movio {
+	movie(movieId: Int!): Movie!
+	movies: [Movie!]!
+	director(directorId: Int!): Director!
+	directors: [Director!]!
+    star(starId: Int!): Star!
+	stars: [Star!]!
+}
+
+type Movie {
+	id: Int!
+	name: String!
+	runtime: Int!
+	
+	directorId: Int!
+	director: Director!
+
+    starIds: [Int!]!
+    stars: [Star!]!
+}
+
+type Director {
+	id: Int!
+	name: String!
+
+	movieIds: [Int!]!
+	movies: [Movie!]!
+}
+
+type Star {
+	id: Int!
+	name: String!
+    
+    movieIds: [Int!]!
+    movies: [Movie!]!
+}
