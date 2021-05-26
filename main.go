@@ -4,11 +4,8 @@ import (
 	"context"
 	_ "embed"
 	"net/http"
-	"os"
 	"time"
 
-	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	graphql "github.com/graph-gophers/graphql-go"
 	"github.com/graph-gophers/graphql-go/relay"
@@ -28,7 +25,6 @@ func startHTTP(storage *store.Service) {
 	gqlSchema := graphql.MustParseSchema(schema, &RootResolver{}, graphql.UseFieldResolvers())
 
 	r := mux.NewRouter()
-	r.Handle("/", handlers.LoggingHandler(os.Stdout, playground.Handler("Playground", "/query")))
 	r.Handle("/query", &relay.Handler{Schema: gqlSchema})
 
 	srv := &http.Server{
