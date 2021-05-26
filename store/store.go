@@ -6,7 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const delay = 100 * time.Millisecond
+const delay = 200 * time.Millisecond
 
 type Service struct {
 }
