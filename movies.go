@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/segfault88/graphqltalk/store"
 )
 
@@ -14,7 +13,6 @@ func (r *RootResolver) Movie(ctx context.Context, args struct{ MovieID int32 }) 
 func (r *RootResolver) Movies(ctx context.Context) []*MovieResolver {
 	movies := r.storage.GetAllMovies()
 	resolvers := []*MovieResolver{}
-	spew.Dump(movies)
 	for _, movie := range movies {
 		resolvers = append(resolvers, &MovieResolver{r, movie})
 	}

@@ -3,7 +3,7 @@ module github.com/segfault88/graphqltalk
 go 1.16
 
 require (
-	github.com/davecgh/go-spew v1.1.1
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/graph-gophers/graphql-go v1.1.0
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
