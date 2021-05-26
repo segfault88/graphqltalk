@@ -6,8 +6,12 @@ import (
 	"github.com/segfault88/graphqltalk/store"
 )
 
-func (r *RootResolver) Movie(ctx context.Context, args struct{ MovieID int32 }) *MovieResolver {
-	return &MovieResolver{r, r.storage.GetMovies(int(args.MovieID))[0]}
+func (r *RootResolver) Movie(ctx context.Context, args struct{ MovieID int32 }) (*MovieResolver, error) {
+	movie, err := r.loaders.Movies.Load(int(args.MovieID))
+	if err != nil {
+		return nil, err
+	}
+	return &MovieResolver{r, movie}, nil
 }
 
 func (r *RootResolver) Movies(ctx context.Context) []*MovieResolver {
@@ -22,6 +26,20 @@ func (r *RootResolver) Movies(ctx context.Context) []*MovieResolver {
 type MovieResolver struct {
 	root  *RootResolver
 	movie store.Movie
+}
+
+func newMovieResolversLookup(root *RootResolver, movieIDs []int) ([]*MovieResolver, error) {
+	movies, errs := root.loaders.Movies.LoadAll(movieIDs)
+	for _, err := range errs {
+		if err != nil {
+			return nil, err
+		}
+	}
+	resolvers := []*MovieResolver{}
+	for _, movie := range movies {
+		resolvers = append(resolvers, &MovieResolver{root, movie})
+	}
+	return resolvers, nil
 }
 
 func (m *MovieResolver) ID() int32 {
@@ -40,7 +58,7 @@ func (m *MovieResolver) DirectorID() int32 {
 	return int32(m.movie.DirectorID)
 }
 
-func (m *MovieResolver) Director(ctx context.Context) *DirectorResolver {
+func (m *MovieResolver) Director(ctx context.Context) (*DirectorResolver, error) {
 	return m.root.Director(ctx, struct{ DirectorID int32 }{int32(m.movie.DirectorID)})
 }
 
@@ -52,10 +70,6 @@ func (m *MovieResolver) StarIDs(ctx context.Context) []int32 {
 	return ids
 }
 
-func (m *MovieResolver) Stars(ctx context.Context) []*StarResolver {
-	resolvers := []*StarResolver{}
-	for _, starID := range m.movie.Stars {
-		resolvers = append(resolvers, m.root.Star(ctx, struct{ StarID int32 }{int32(starID)}))
-	}
-	return resolvers
+func (m *MovieResolver) Stars(ctx context.Context) ([]*StarResolver, error) {
+	return newStarResolversLookup(m.root, m.movie.Stars)
 }

@@ -44,8 +44,9 @@ func startHTTP(storage *store.Service) {
 
 type RootResolver struct {
 	storage *store.Service
+	loaders store.Loaders
 }
 
 func (r *RootResolver) Movio(ctx context.Context) *RootResolver {
-	return r
+	return &RootResolver{r.storage, r.storage.NewLoaders()}
 }

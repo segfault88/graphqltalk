@@ -6,8 +6,12 @@ import (
 	"github.com/segfault88/graphqltalk/store"
 )
 
-func (r *RootResolver) Star(ctx context.Context, args struct{ StarID int32 }) *StarResolver {
-	return &StarResolver{r, r.storage.GetStars(int(args.StarID))[0]}
+func (r *RootResolver) Star(ctx context.Context, args struct{ StarID int32 }) (*StarResolver, error) {
+	star, err := r.loaders.Directors.Load(int(args.StarID))
+	if err != nil {
+		return nil, err
+	}
+	return &StarResolver{r, store.Star(star)}, nil
 }
 
 func (r *RootResolver) Stars(ctx context.Context) []*StarResolver {
@@ -22,6 +26,20 @@ func (r *RootResolver) Stars(ctx context.Context) []*StarResolver {
 type StarResolver struct {
 	root *RootResolver
 	star store.Star
+}
+
+func newStarResolversLookup(root *RootResolver, starIDs []int) ([]*StarResolver, error) {
+	stars, errs := root.loaders.Stars.LoadAll(starIDs)
+	for _, err := range errs {
+		if err != nil {
+			return nil, err
+		}
+	}
+	resolvers := []*StarResolver{}
+	for _, star := range stars {
+		resolvers = append(resolvers, &StarResolver{root, star})
+	}
+	return resolvers, nil
 }
 
 func (s *StarResolver) ID() int32 {
@@ -40,10 +58,6 @@ func (s *StarResolver) MovieIDs(ctx context.Context) []int32 {
 	return ids
 }
 
-func (s *StarResolver) Movies(ctx context.Context) []*MovieResolver {
-	resolvers := []*MovieResolver{}
-	for _, movieID := range s.star.Movies {
-		resolvers = append(resolvers, s.root.Movie(ctx, struct{ MovieID int32 }{int32(movieID)}))
-	}
-	return resolvers
+func (s *StarResolver) Movies(ctx context.Context) ([]*MovieResolver, error) {
+	return newMovieResolversLookup(s.root, s.star.Movies)
 }

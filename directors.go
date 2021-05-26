@@ -6,8 +6,12 @@ import (
 	"github.com/segfault88/graphqltalk/store"
 )
 
-func (r *RootResolver) Director(ctx context.Context, args struct{ DirectorID int32 }) *DirectorResolver {
-	return &DirectorResolver{r, r.storage.GetDirectors(int(args.DirectorID))[0]}
+func (r *RootResolver) Director(ctx context.Context, args struct{ DirectorID int32 }) (*DirectorResolver, error) {
+	director, err := r.loaders.Directors.Load(int(args.DirectorID))
+	if err != nil {
+		return nil, err
+	}
+	return &DirectorResolver{r, director}, nil
 }
 
 func (r *RootResolver) Directors(ctx context.Context) []*DirectorResolver {
@@ -40,10 +44,6 @@ func (d *DirectorResolver) MovieIDs() []int32 {
 	return ids
 }
 
-func (d *DirectorResolver) Movies(ctx context.Context) []*MovieResolver {
-	resolvers := []*MovieResolver{}
-	for _, movieID := range d.director.Movies {
-		resolvers = append(resolvers, d.root.Movie(ctx, struct{ MovieID int32 }{int32(movieID)}))
-	}
-	return resolvers
+func (d *DirectorResolver) Movies(ctx context.Context) ([]*MovieResolver, error) {
+	return newMovieResolversLookup(d.root, d.director.Movies)
 }
