@@ -45,5 +45,5 @@ func (d *DirectorResolver) MovieIDs() []int32 {
 }
 
 func (d *DirectorResolver) Movies(ctx context.Context) ([]*MovieResolver, error) {
-	return newMovieResolversLookup(d.root, d.director.Movies)
+	return d.root.lookupMovies(d.director.Movies)
 }

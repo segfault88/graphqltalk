@@ -28,8 +28,8 @@ type MovieResolver struct {
 	movie store.Movie
 }
 
-func newMovieResolversLookup(root *RootResolver, movieIDs []int) ([]*MovieResolver, error) {
-	movies, errs := root.loaders.Movies.LoadAll(movieIDs)
+func (r *RootResolver) lookupMovies(movieIDs []int) ([]*MovieResolver, error) {
+	movies, errs := r.loaders.Movies.LoadAll(movieIDs)
 	for _, err := range errs {
 		if err != nil {
 			return nil, err
@@ -37,7 +37,7 @@ func newMovieResolversLookup(root *RootResolver, movieIDs []int) ([]*MovieResolv
 	}
 	resolvers := []*MovieResolver{}
 	for _, movie := range movies {
-		resolvers = append(resolvers, &MovieResolver{root, movie})
+		resolvers = append(resolvers, &MovieResolver{r, movie})
 	}
 	return resolvers, nil
 }
@@ -71,5 +71,5 @@ func (m *MovieResolver) StarIDs(ctx context.Context) []int32 {
 }
 
 func (m *MovieResolver) Stars(ctx context.Context) ([]*StarResolver, error) {
-	return newStarResolversLookup(m.root, m.movie.Stars)
+	return m.root.lookupStars(m.movie.Stars)
 }
